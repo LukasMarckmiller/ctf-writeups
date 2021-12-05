@@ -1,7 +1,7 @@
 # HTB Gift Wrapping Writeup
 HackTheBox 2021 - Cyber Santa is Coming to Town  CTF
 
-This is a writeup for the **reversing** challenge from the 2021 HTB Christmas (*Cyber Santa is Coming to Town*) CTF.
+This is a writeup for the **reversing** challenge *Gift Wrapping* from the 2021 HTB Christmas (*Cyber Santa is Coming to Town*) CTF.
 
 After unpacking the binary I ran `file giftwrap` and `binwalk giftwrap` to get a sense of what binary we are dealing with. And the binary itself.
 > ELF 64-bit LSB executable <br>
