@@ -17,7 +17,7 @@ and load it into Ghidra once again.
 Now we can identify a `main` function at `0x401825` to reverse.
 ![main_rev](img/rev_main.png)
 Nothing special here, the binary outputs some text and reads some chars from the stdin. 
-And then it calls a *kind of compare* function at `0x401a04` with two pointers, one of the named **CHECK**. 
+And then it calls a *kind of compare* function at `0x401a04` with two pointers, one of them named **CHECK**.<br>
 Actually before i loaded the decompressed binary into ghidra i ran it with `gdb` and discovered the strange function at `0x401a04` is [memcmp](https://www.cplusplus.com/reference/cstring/memcmp/) :
 ```c++
 int memcmp ( const void * ptr1, const void * ptr2, size_t num );
@@ -30,7 +30,7 @@ That means our *CHECK* pointer points to a block of memory.<br>
 
 Following  *CHECK* we can find the following memory block.<br>
 ![secret](img/secret_mem_block.png)<br>
-Unfortunatally we can't read any data, cause before comparing the input string there is some magic happening on the user supplied input. 
+Unfortunatally we can't read any data, cause before comparing the input string there is some encryption happening on the user supplied input. 
 ```c
 __isoc99_scanf(&UNK_0049f020,local_11c + 1);
 local_11c[0] = 0;
@@ -40,7 +40,22 @@ while ((uint)local_11c[0] < 0x100) {
     local_11c[0] = local_11c[0] + 1;
   }
 ```
-I was too lazy to reverse this part so I decided to run the binary with gbd/pwndbg and check the inputs to `memcmp`.
+## Solution 1 - With static code analysis
+I didn't read the code again so i didn't see that its an simple XOR on the user input. So just copy the bytes from the memory block at `0x4cc0f0` and build a script: 
+```python
+out = ''
+mem_bytes = bytes.fromhex('bba7b18886838bacc7c29d87acc6c3ac9bc78197d2d28e')
+
+for i in range(0,len(mem_bytes)):
+   r = int.from_bytes(mem_bytes[i:i+1], 'little') ^ int.from_bytes(b'\xf3','little')
+   r = r.to_bytes(1,'little')
+   out += r.decode('utf-8')
+print(out)
+```
+> HTB{upx_41nt_50_h4rd!!}
+
+## Solution 2 - Dynamic analysis
+Run the binary with gbd/pwndbg and check the inputs to `memcmp`.<br>
 ![enter image description here](img/registers_desc.png)<br>
 So let's keep an eye on the registers `RDI` which contains the pointer to our secret memory block and `RSI` which contains the user-supplied obfuscated data. 
 
