@@ -4,7 +4,8 @@ HackTheBox 2021 - Cyber Santa is Coming to Town  CTF
 This is a writeup for the **reversing** challenge from the 2021 HTB Christmas (*Cyber Santa is Coming to Town*) CTF.
 
 After unpacking the binary I ran `file giftwrap` and `binwalk giftwrap` to get a sense of what binary we are dealing with. And the binary itself.
-> ELF 64-bit LSB executable 
+> ELF 64-bit LSB executable <br>
+
 ![exec](img/exec.png)
 
 Loading the binary into Ghidra revealed ... well not much. It seems the binary is somehow compressed or packed. So I ran the built-in string search and found two interesting candidates.
@@ -24,11 +25,11 @@ int memcmp ( const void * ptr1, const void * ptr2, size_t num );
 >from https://www.cplusplus.com: <br>Compare two blocks of memory<br>
 Compares the first _num_ bytes of the block of memory pointed by _ptr1_ to the first _num_ bytes pointed by _ptr2_, returning zero if they all match or a value different from zero representing which is greater if they do not.
 
-That means our *CHECK* pointer points to a block of memory.
+That means our *CHECK* pointer points to a block of memory.<br>
 ```iVar2 = memcmp(&CHECK,local_11c + 1,0x17);```
 
-Following  *CHECK* we can find the following memory block.
-![secret](img/secret_mem_block.png)
+Following  *CHECK* we can find the following memory block.<br>
+![secret](img/secret_mem_block.png)<br>
 Unfortunatally we can't read any data, cause before comparing the input string there is some magic happening on the user supplied input. 
 ```c
 __isoc99_scanf(&UNK_0049f020,local_11c + 1);
@@ -40,7 +41,7 @@ while ((uint)local_11c[0] < 0x100) {
   }
 ```
 I was too lazy to reverse this part so I decided to run the binary with gbd/pwndbg and check the inputs to `memcmp`.
-![enter image description here](img/registers_desc.png)
+![enter image description here](img/registers_desc.png)<br>
 So let's keep an eye on the registers `RDI` which contains the pointer to our secret memory block and `RSI` which contains the user-supplied obfuscated data. 
 
  ![registers](img/check_registers.png)
